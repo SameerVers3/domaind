@@ -1,0 +1,36 @@
+name: validate domain registration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "domains/**"
+      - "schema.json"
+      - "reserved.json"
+      - "blocked.json"
+      - "crates/validator/**"
+      - "config.toml"
+      - ".github/workflows/validate.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "crates/validator"
+
+      - name: build validator
+        run: cargo build --release -p validator
+
+      - name: run validation
+        run: ./target/release/validator
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_BASE_REF: ${{ github.base_ref }}
