@@ -233,9 +233,11 @@ fn validate_domain_file(
     let compiled = jsonschema::JSONSchema::compile(schema)
         .map_err(|e| ValidationError::Schema(e.to_string()))?;
     let instance = serde_json::from_str(&content).map_err(|e| ValidationError::Parse(e.to_string()))?;
-    compiled
-        .validate(&instance)
-        .map_err(|e| ValidationError::Schema(format!("{:?}", e)))?;
+    let errors: Vec<_> = compiled.validate(&instance).err().into_iter().flatten().collect();
+    if !errors.is_empty() {
+        let msg = errors.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("; ");
+        return Err(ValidationError::Schema(msg));
+    }
 
     let re = Regex::new(r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$").unwrap();
     if !re.is_match(&domain.subdomain) {
