@@ -1,0 +1,16 @@
+[domain]
+name = "testing.domain"
+project = "domaind"
+zone_id = "ZONEID"
+
+[limits]
+max_per_user = 5
+
+[validation]
+allowed_record_types = ["A", "AAAA", "CNAME", "TXT", "MX", "URL"]
+min_ttl = 60
+max_ttl = 86400
+
+[github]
+repo_owner = "sameervers3"
+repo_name = "domaind"

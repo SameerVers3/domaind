@@ -15,6 +15,9 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,7 +33,28 @@ jobs:
         run: cargo build --release -p validator
 
       - name: run validation
-        run: ./target/release/validator
+        id: run
+        run: |
+          set +e
+          ./target/release/validator > validation_output.txt 2>&1
+          exit_code=$?
+          cat validation_output.txt
+          echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
+          exit $exit_code
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_BASE_REF: ${{ github.base_ref }}
+
+      - name: comment on pr
+        if: always()
+        run: |
+          if [ "${{ steps.run.outputs.exit_code }}" == "0" ]; then
+            body="all validations passed"
+          else
+            body=$(cat validation_output.txt)
+          fi
+
+          printf '%s\n' "$body" > comment_body.txt
+          gh pr comment ${{ github.event.pull_request.number }} --body-file comment_body.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
