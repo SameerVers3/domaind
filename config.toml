@@ -1,7 +1,7 @@
 [domain]
-name = "testing.domain"
+name = "sameervers3.dev"
 project = "domaind"
-zone_id = "ZONEID"
+zone_id = "675db04827f03ee3e341abf7236b9311"
 
 [limits]
 max_per_user = 5

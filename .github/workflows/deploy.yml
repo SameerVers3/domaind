@@ -1,0 +1,48 @@
+name: deploy to cloudflare
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "domains/**"
+      - "config.toml"
+      - "crates/sync/**"
+      - ".github/workflows/deploy.yml"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "crates/sync"
+
+      - name: build sync
+        run: cargo build --release -p sync
+
+      - name: sync dns
+        id: sync
+        run: ./target/release/sync
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          GITHUB_EVENT_AFTER: ${{ github.event.after }}
+
+      - name: comment on merged pr
+        if: steps.sync.outcome == 'success'
+        run: |
+          pr_number=$(gh pr list --search "${{ github.sha }}" --state merged --json number --jq '.[0].number')
+          if [ -n "$pr_number" ]; then
+            gh pr comment "$pr_number" --body "domain is live"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
