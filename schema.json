@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "subdomain registration",
+  "type": "object",
+  "required": ["subdomain", "owner", "records"],
+  "additionalProperties": false,
+  "properties": {
+    "subdomain": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$",
+      "description": "subdomain name. lowercase letters, numbers, and hyphens only. can't start or end with a hyphen."
+    },
+    "owner": {
+      "type": "object",
+      "required": ["github_username"],
+      "additionalProperties": false,
+      "properties": {
+        "github_username": {
+          "type": "string",
+          "description": "gitHub username of whoever owns this subdomain"
+        }
+      }
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "enum": ["A", "AAAA", "CNAME", "TXT", "MX", "URL"],
+            "description": "DNS record type. NS records aren't allowed."
+          },
+          "value": {
+            "type": "string",
+            "description": "What the record points to"
+          },
+          "ttl": {
+            "type": "integer",
+            "minimum": 60,
+            "maximum": 86400,
+            "description": "how long this record can be cached (optional) defaults to 300."
+          }
+        }
+      }
+    }
+  }
+}
