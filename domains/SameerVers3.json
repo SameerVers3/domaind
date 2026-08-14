@@ -1,0 +1,9 @@
+{
+  "subdomain": "testing-domainx",
+  "owner": {
+    "github_username": "SameerVers3"
+  },
+  "records": [
+    { "type": "CNAME", "value": "sameervers3.dev", "ttl": 300 }
+  ]
+}
